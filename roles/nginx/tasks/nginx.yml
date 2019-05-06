@@ -12,13 +12,13 @@
   notify: start nginx
 
 # Install package based on OS
-- name: install system updates for centos systems
+- name: Install Nginx for CentOs
   yum: name=nginx state=latest update_cache=yes
   when: ansible_distribution == "CentOS" and (apt_result is failed or yum_result is failed)
   notify: start nginx
 
 # Install package based on OS
-- name: install system updates for ubuntu systems
+- name: Install Nginx for Ubuntu
   apt: upgrade=dist update_cache=yes
   when: ansible_distribution == "Ubuntu" and (apt_result is failed or yum_result is failed)
   notify: start nginx
