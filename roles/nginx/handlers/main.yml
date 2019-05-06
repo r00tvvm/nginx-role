@@ -1,0 +1,10 @@
+---
+# handlers file for nginx
+- name: start nginx
+  become: true
+  service: name=nginx state=started
+
+- name: stop nginx
+  become: true
+  service: name=nginx state=stopped
+

@@ -1,0 +1,44 @@
+---
+- name: apt to install nginx
+  apt: name=nginx state=latest update_cache=yes
+  when: ansible_pkg_mgr == "apt"
+  register: apt_result
+  notify: start nginx
+
+- name: yum to install nginx
+  yum: name=nginx state=latest update_cache=yes
+  when: ansible_pkg_mgr == "yum"
+  register: yum_result
+  notify: start nginx
+
+# Install package based on OS
+- name: install system updates for centos systems
+  yum: name=nginx state=latest update_cache=yes
+  when: ansible_distribution == "CentOS" and (apt_result is failed or yum_result is failed)
+  notify: start nginx
+
+# Install package based on OS
+- name: install system updates for ubuntu systems
+  apt: upgrade=dist update_cache=yes
+  when: ansible_distribution == "Ubuntu" and (apt_result is failed or yum_result is failed)
+  notify: start nginx
+
+# Generic packager identification
+- name: Generic Install Nginx package
+  action: >
+    {{ ansible_pkg_mgr }} name=nginx state=present update_cache=yes
+  notify: start nginx
+  tags: [never, generic]
+
+# Remove nginx 
+- name: stop nginx
+  become: true
+  ignore_errors: True
+  service: name=nginx state=stopped
+  tags: [never, remove]
+- name: Generic Remove Nginx package
+  action: >
+    {{ ansible_pkg_mgr }} name=nginx state=absent update_cache=yes
+  tags: [never, remove]
+
+
