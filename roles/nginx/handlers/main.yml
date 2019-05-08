@@ -1,8 +1,13 @@
 ---
 # handlers file for nginx
+#- name: start and enable nginx CentOS
 - name: start nginx
   become: true
-  service: name=nginx state=started
+  systemd: 
+    name: nginx
+    enabled: yes
+    state: started
+    daemon-reload: yes
 
 - name: stop nginx
   become: true
