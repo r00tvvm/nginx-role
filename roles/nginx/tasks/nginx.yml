@@ -1,37 +1,39 @@
 ---
-- name: apt to install nginx
-  apt: name=nginx state=latest update_cache=yes
-  when: ansible_pkg_mgr == "apt"
-  register: apt_result
-  notify: start nginx
-
-- name: yum to install nginx
-  yum: 
-    name: ['epel-release', 'nginx'] 
-    state: latest 
-    update_cache: yes
-  when: ansible_pkg_mgr == "yum"
-  register: yum_result
-  notify: start nginx
-
-# Install package based on OS
-- name: Install Nginx for CentOs
-  yum: name=nginx state=latest update_cache=yes
-  when: ansible_distribution == "CentOS" and (apt_result is failed or yum_result is failed)
-  notify: start nginx
-
-# Install package based on OS
-- name: Install Nginx for Ubuntu
-  apt: upgrade=dist update_cache=yes
-  when: ansible_distribution == "Ubuntu" and (apt_result is failed or yum_result is failed)
-  notify: start nginx
-
-# Generic packager identification
+# Use Generic packager identification
 - name: Generic Install Nginx package
   action: >
     {{ ansible_pkg_mgr }} name=nginx state=present update_cache=yes
   notify: start nginx
-  tags: [never, generic]
+  register: generic_install
+  tags: [never, generic, install]
+
+- name: Use apt to install nginx on Debian hosts
+  apt: name=nginx state=latest update_cache=yes
+  when: ansible_pkg_mgr == "apt" and generic_install is not defined
+  register: apt_result
+  notify: start nginx
+  tags: [ never, debian, install ]
+
+- name: Use yum to install nginx on CentOS hosts
+  yum: name=nginx state=latest update_cache=yes
+  when: ansible_pkg_mgr == "yum" and generic_install is not defined
+  register: yum_result
+  notify: start nginx
+  tags: [ never, centos, install ]
+
+# Install package based on OS name
+- name: Install Nginx for CentOs
+  yum: name=nginx state=latest update_cache=yes
+  when: ansible_distribution == "CentOS" and yum_result is failed
+  notify: start nginx
+  tags: [ never, centos, install ]
+
+# Install package based on OS name
+- name: Install Nginx for Debian
+  apt: upgrade=dist update_cache=yes
+  when: ansible_distribution == "Debian" and apt_result is failed
+  notify: start nginx
+  tags: [ never, debian, install ]
 
 # Remove nginx 
 - name: stop nginx
@@ -44,4 +46,20 @@
     {{ ansible_pkg_mgr }} name=nginx state=absent update_cache=yes
   tags: [never, remove]
 
+# Status
+- name: check if package is installed
+  package:
+    name: nginx
+    state: present
+  check_mode: true
+  register: nginx_status
+  tags: status
+- debug: 
+    msg: "Status: Nginx not installed"
+  when: nginx_status.results is not defined 
+  tags: status
+- debug: 
+    msg: "Status: {{nginx_status.results}}"
+  when: nginx_status.results is defined
+  tags: status
 
