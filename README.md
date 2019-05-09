@@ -7,25 +7,37 @@ Add *hosts* file into same directory and usew role with -i hosts
 ```
 Example: 
  > cat hosts
-  [web-debian]
+  [debian]
   ip1
   ip2
 
-  [web-centos]
+  [centos]
   ip3
 
   [web:children]
-  web-debian
-  web-centos
+  debian
+  centos
 ```
 ## Usage
 * Install Nginx to inventory hosts
 ```
  > git clone https://github.com/r00tvvm/nginx-role.git && cd nginx-role
- > ansible-playbook -i hosts site.yml
+ > ansible-playbook -i hosts site.yml -t install
 ```
-
-* Remove Nginx from inventory hosts
+* Install Nginx only to Debian hosts
+```
+ > ansible-playbook -i hosts site.yml -t debian
+```
+* Install Nginx only to CentOS hosts
+```
+ > ansible-playbook -i hosts site.yml -t centos
+```
+* Remove Nginx from all hosts
 ```
  > ansible-playbook -i hosts site.yml -t remove
 ```
+* Get status of Nginx package on hosts
+```
+ > ansible-playbook -i hosts site.yml -t status
+```
+
